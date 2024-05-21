@@ -1,0 +1,311 @@
+Index.html 👍
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <h1>&#128511; Todo List</h1>
+        <input type="text" class="todo-input" placeholder="Write something todo">
+        <div class="todos">
+            <div class="uncompleted-todos">
+                <div class="todo-item">
+                    <span>
+                        <input type="checkbox"> Drink water
+                    </span>
+                    <a href="#">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="todo-item">
+                    <span>
+                        <input type="checkbox"> Drink water
+                    </span>
+                    <a href="#">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div class="completed-todos">
+                <div class="completed-tittle">Completed (1/3)</div>
+                <div class="todo-item">
+                    <span>
+                        <input type="checkbox"> Drink water
+                    </span>
+                    <a href="#">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+Js 👍
+
+//variables
+let todoItems = []
+const todoInput = document.querySelector('.todo-input')
+const completedTodosDiv = document.querySelector('.completed-todos')
+const uncompletedTodosDiv = document.querySelector('.uncompleted-todos')
+const audio = new Audio('sound.mp3')
+
+//Get todo list on first boot
+window.onload = () => {
+    let storageTodoItems = localStorage.getItem('todoItems')
+    if(storageTodoItems !== null){
+        todoItems = JSON.parse(storageTodoItems)
+    }
+    
+    render()
+}
+
+//Get the content into the input
+todoInput.onkeyup = ((e) => {
+    let value = e.target.value.replace(/^\s+/, "")
+    if(value && e.keyCode === 13){ // Enter
+        addTodo(value)
+
+        todoInput.value = ''
+        todoInput.focus()
+    }
+})
+
+//Add todo
+function addTodo(text){
+    todoItems.push({
+        id: Date.now(),
+        text,
+        completed: false
+    })
+    saveAndRender()
+}
+
+//Remove todo
+function removeTodo(id){
+    todoItems = todoItems.filter(todo => todo.id !== Number(id))
+    saveAndRender()
+}
+
+//mark as completed
+function markAsCompleted(id){
+    todoItems = todoItems.filter(todo => {
+        if(todo.id === Number(id)) {
+            todo.completed = true
+        }
+
+        return todo
+    })
+
+    audio.play()
+
+    saveAndRender()
+}
+
+//mark as uncompleted
+function markAsUncompleted(id){
+    todoItems = todoItems.filter(todo => {
+        if(todo.id === Number(id)) {
+            todo.completed = false
+        }
+
+        return todo
+    })
+
+    saveAndRender()
+}
+
+//save to local storage
+function save(){
+    localStorage.setItem('todoItems', JSON.stringify(todoItems))
+}
+
+//render
+function render(){
+    let unCompletedTodos = todoItems.filter(item => !item.completed)
+    let completedTodos = todoItems.filter(item => item.completed)
+
+    completedTodosDiv.innerHTML = ''
+    uncompletedTodosDiv.innerHTML = ''
+
+    if(unCompletedTodos.length > 0){
+        unCompletedTodos.forEach(todo => {
+            uncompletedTodosDiv.append(createTodoElement(todo))
+        })
+    }else{
+        uncompletedTodosDiv.innerHTML = `<div class='empty'>No uncompleted mission</div>`
+    }
+
+    if(completedTodos.length > 0){
+        completedTodosDiv.innerHTML = `<div class='completed-tittle'>Completed (${completedTodos.length} / ${todoItems.length})</div>`
+
+        completedTodos.forEach(todo => {
+            completedTodosDiv.append(createTodoElement(todo))
+        })
+    }
+}
+
+//save and render
+function saveAndRender(){
+    save()
+    render()
+}
+
+//create todo list item
+function createTodoElement(todo){
+    //create todo list container
+    const todoDiv = document.createElement('div')
+    todoDiv.setAttribute('data-id', todo.id)
+    todoDiv.className = 'todo-item' 
+
+    //create todo item text
+    const todoTextSpan = document.createElement('span')
+    todoTextSpan.innerHTML = todo.text
+
+    //checkbox for list
+    const todoInputCheckbox = document.createElement('input')
+    todoInputCheckbox.type = 'checkbox'
+    todoInputCheckbox.checked = todo.completed
+    todoInputCheckbox.onclick = (e) => {
+        let id = e.target.closest('.todo-item').dataset.id
+        e.target.checked ? markAsCompleted(id) : markAsUncompleted(id)
+    }
+
+    //delete button for lists
+    const todoRemoveBtn = document.createElement('a')
+    todoRemoveBtn.href = '#'
+    todoRemoveBtn.innerHTML = `<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" />
+                                </svg>`
+    todoRemoveBtn.onclick = (e) => {
+        let id = e.target.closest('.todo-item').dataset.id
+        removeTodo(id)
+    }
+
+    todoTextSpan.prepend(todoInputCheckbox)
+    todoDiv.appendChild(todoTextSpan)
+    todoDiv.appendChild(todoRemoveBtn)
+
+    return todoDiv
+}
+
+
+
+Css 👍
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+:root {
+    --radius: 15px;
+    --app-width: 600px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: url('mamang rafael.jpeg') center;
+    background-size: cover;
+}
+
+.app {
+    color: #ffffffb0;
+    background-color: #ffffff21;
+    width: var(--app-width);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: 0 15px 40px -20px black;
+}
+
+.app h1 {
+    margin-top: 0;
+    margin-bottom: 40px;
+    font-size: 28px;
+}
+
+.todo-input {
+    width: 100%;
+    margin-bottom: 2rem;
+    border: none;
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    font-size: 20px;
+    background-color: #f4f4f425;
+    color: white;
+}
+
+.todo-input::placeholder {
+    color: #ffffff70;
+}
+
+.todo
+.completed-todos
+.uncompleted-todos {
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+}
+
+.todo-item {
+    background-color: #f4f4f4bd;
+    margin-bottom: 10px;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: black;
+}
+
+.todo-item span {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+}
+
+.todo-item input[type=checkbox] {
+    width: 20px;
+    height: 20px;
+    accent-color: lime;
+}
+
+.todo-item a {
+    color: #555555;
+}
+
+.todo-item a svg {
+    width: 25px;
+    height: 25px;
+    pointer-events: none;
+}
+
+.completed-todos .todo-item {
+    background-color: #74c674;
+    text-decoration: line-through;
+}
+
+.completed-tittle {
+    font-size: 20px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+
